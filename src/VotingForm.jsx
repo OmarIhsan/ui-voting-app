@@ -253,6 +253,7 @@ export default function VotingForm() {
   const [selections, setSelections] = useState({});
   const [submitted,  setSubmitted]  = useState(false);
   const [expanded,   setExpanded]   = useState({});
+  const [copied,     setCopied]     = useState(false);
 
   const totalFields = FORM_CONFIG.length;
   const filled      = Object.keys(selections).length;
@@ -261,56 +262,144 @@ export default function VotingForm() {
   const handleChange   = (fieldId, value) => setSelections(prev => ({ ...prev, [fieldId]: value }));
   const toggleExpanded = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
 
+  /* بناء نص الرسالة القابل للمشاركة */
+  const buildShareText = () => {
+    const date = new Date().toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
+    const lines = FORM_CONFIG.map(field => {
+      const opt = field.options.find(o => o.value === selections[field.id]);
+      return `${field.emoji} ${field.group}: ${opt?.label ?? '—'}`;
+    });
+    return [
+      '🗳️ تصويتي على تصميم تطبيق المواعيد الطبية',
+      '━━━━━━━━━━━━━━━━━━━━',
+      ...lines,
+      '━━━━━━━━━━━━━━━━━━━━',
+      `📅 ${date}`,
+    ].join('\n');
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(buildShareText());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      /* fallback for older browsers */
+      const ta = document.createElement('textarea');
+      ta.value = buildShareText();
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  const handleWhatsApp = () => {
+    const text = encodeURIComponent(buildShareText());
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('🗳️ نتيجة التصويت:', JSON.stringify({
-      timestamp: new Date().toISOString(),
-      voter: 'عضو فريق',
-      selections,
-      completionPercentage: `${Math.round(progress)}%`,
-    }, null, 2));
     setSubmitted(true);
   };
 
-  const handleReset = () => { setSelections({}); setSubmitted(false); };
+  const handleReset = () => { setSelections({}); setSubmitted(false); setCopied(false); };
 
-  /* ── شاشة الشكر ─── */
+  /* ── شاشة الشكر + المشاركة ─── */
   if (submitted) {
+    const shareText = buildShareText();
     return (
-      <div className="glass-panel" style={{ maxWidth: 600, margin: '0 auto', padding: '2rem', textAlign: 'center', direction: 'rtl' }}>
+      <div className="glass-panel" style={{ maxWidth: 600, margin: '0 auto', padding: 'clamp(20px,5vw,32px)', textAlign: 'center', direction: 'rtl' }}>
+
+        {/* أيقونة النجاح */}
         <div style={{
-          width: 80, height: 80,
+          width: 72, height: 72,
           background: 'linear-gradient(135deg, #06B6D4, #0D9488)',
           borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '0 auto 20px', animation: 'pulse-glow 2s ease infinite',
+          margin: '0 auto 16px', animation: 'pulse-glow 2s ease infinite',
         }}>
-          <CheckCircle size={40} color="white" />
+          <CheckCircle size={36} color="white" />
         </div>
-        <h3 style={{ color: 'white', fontSize: 'clamp(18px,4vw,24px)', fontWeight: 800, marginBottom: 8 }}>
-          تم إرسال تصويتك! 🎉
+        <h3 style={{ color: 'white', fontSize: 'clamp(18px,4vw,22px)', fontWeight: 800, marginBottom: 6 }}>
+          تم تسجيل تصويتك! 🎉
         </h3>
-        <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14, marginBottom: 8 }}>
-          تم حفظ اختياراتك بنجاح.
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 20 }}>
+          انسخ نص تصويتك وشاركه مع المجموعة عبر واتساب أو انستغرام
         </p>
-        <div style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.2)', borderRadius: 12, padding: '16px', margin: '20px 0', textAlign: 'right' }}>
-          <div style={{ color: '#06B6D4', fontSize: 11, fontWeight: 700, marginBottom: 10 }}>اختياراتك</div>
-          {Object.entries(selections).map(([key, value]) => {
-            const field = FORM_CONFIG.find(f => f.id === key);
-            const opt   = field?.options.find(o => o.value === value);
-            return (
-              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4, padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>{field?.emoji} {field?.group}</span>
-                <span style={{ color: 'white', fontSize: 12, fontWeight: 600 }}>{opt?.label}</span>
-              </div>
-            );
-          })}
-        </div>
-        <button onClick={handleReset} style={{
-          background: 'rgba(255,255,255,0.08)', color: 'white', border: '1px solid rgba(255,255,255,0.15)',
-          borderRadius: 12, padding: '12px 24px', cursor: 'pointer',
-          display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600,
+
+        {/* صندوق النص الجاهز للنسخ */}
+        <div style={{
+          background: 'rgba(0,0,0,0.35)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 14, padding: '16px 18px',
+          textAlign: 'right', marginBottom: 16,
+          fontFamily: "'Cairo', sans-serif",
+          fontSize: 14, lineHeight: 2, color: 'rgba(255,255,255,0.9)',
+          whiteSpace: 'pre-line', userSelect: 'all',
+          letterSpacing: '0.01em',
         }}>
-          <RotateCcw size={16} /> التصويت مجدداً
+          {shareText}
+        </div>
+
+        {/* أزرار المشاركة */}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 16 }}>
+
+          {/* نسخ النص */}
+          <button
+            onClick={handleCopy}
+            style={{
+              flex: 1, minWidth: 140,
+              padding: '13px 20px', borderRadius: 12, border: 'none',
+              background: copied
+                ? 'linear-gradient(135deg,#10B981,#059669)'
+                : 'linear-gradient(135deg,#06B6D4,#0891B2)',
+              color: 'white', fontWeight: 700, fontSize: 14,
+              cursor: 'pointer', transition: 'all 0.3s',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              boxShadow: copied ? '0 6px 20px rgba(16,185,129,0.4)' : '0 6px 20px rgba(6,182,212,0.35)',
+              fontFamily: "'Cairo', sans-serif",
+            }}
+          >
+            <span style={{ fontSize: 18 }}>{copied ? '✅' : '📋'}</span>
+            {copied ? 'تم النسخ!' : 'نسخ النص'}
+          </button>
+
+          {/* واتساب */}
+          <button
+            onClick={handleWhatsApp}
+            style={{
+              flex: 1, minWidth: 140,
+              padding: '13px 20px', borderRadius: 12, border: 'none',
+              background: 'linear-gradient(135deg,#25D366,#128C7E)',
+              color: 'white', fontWeight: 700, fontSize: 14,
+              cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              boxShadow: '0 6px 20px rgba(37,211,102,0.35)',
+              fontFamily: "'Cairo', sans-serif",
+            }}
+          >
+            <span style={{ fontSize: 18 }}>💬</span>
+            شارك في واتساب
+          </button>
+        </div>
+
+        {/* تلميح انستغرام */}
+        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, marginBottom: 20 }}>
+          📸 للانستغرام: انسخ النص ثم الصقه في رسالة مباشرة
+        </p>
+
+        {/* التصويت مجدداً */}
+        <button onClick={handleReset} style={{
+          background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.55)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 10, padding: '10px 20px', cursor: 'pointer',
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          fontSize: 13, fontWeight: 600, fontFamily: "'Cairo', sans-serif",
+        }}>
+          <RotateCcw size={14} /> التصويت مجدداً
         </button>
       </div>
     );
