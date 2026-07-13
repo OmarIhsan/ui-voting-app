@@ -86,27 +86,44 @@ const TypographyPreview = ({ text, fontFamily, weight, style: extraStyle }) => (
   </div>
 );
 
-/* ── أسلوب البانر (شريط دوّار / درج) ── */
-const BannerPreview = ({ type, count }) => {
-  const base = {
-    background: 'rgba(255,255,255,0.04)', borderRadius: 10,
-    padding: '8px', border: '1px solid rgba(255,255,255,0.1)',
-    width: 110, flexShrink: 0,
-  };
-
+/* ── حجم ونسبة البانر (معاينة الأبعاد ومساحة الشاشة) ── */
+const BannerSizePreview = ({ ratio, fillPercent }) => {
+  const containerHeight = 46;
+  const bannerHeight = Math.round(containerHeight * (fillPercent / 100));
+  
   return (
-    <div style={base}>
-      <div style={{ position: 'relative', height: 30, borderRadius: 5, overflow: 'hidden', marginBottom: 4 }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,#0D9488,#06B6D4)', display: 'flex', alignItems: 'center', padding: '0 6px' }}>
-          <div style={{ background: 'rgba(255,255,255,0.8)', borderRadius: 2, height: 5, width: '50%' }} />
-        </div>
+    <div style={{
+      width: 100, height: containerHeight, borderRadius: 6,
+      background: 'rgba(255,255,255,0.05)',
+      border: '1px solid rgba(255,255,255,0.15)',
+      position: 'relative', overflow: 'hidden', flexShrink: 0,
+      display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+    }}>
+      {/* منطقة البانر الإعلاني */}
+      <div style={{
+        height: bannerHeight,
+        background: 'linear-gradient(90deg, #06B6D4, #0D9488)',
+        width: '100%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        borderTop: '1px solid rgba(255,255,255,0.2)',
+      }}>
+        <span style={{ fontSize: 8, color: 'white', fontWeight: 800 }}>{ratio}</span>
       </div>
-      <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginBottom: 4 }}>
-        {[...Array(count)].map((_, i) => (
-          <div key={i} style={{ width: i===0?14:6, height: 4, borderRadius: 2, background: i===0?'#06B6D4':'rgba(255,255,255,0.2)' }} />
-        ))}
+      {/* باقي مساحة الشاشة */}
+      <div style={{
+        flex: 1, padding: 4, display: 'flex', flexDirection: 'column', gap: 2,
+        opacity: 0.35, justifyContent: 'flex-start',
+      }}>
+        <div style={{ height: 4, background: '#fff', borderRadius: 2, width: '80%' }} />
+        <div style={{ height: 3, background: '#fff', borderRadius: 1.5, width: '50%' }} />
       </div>
-      <div style={{ fontSize: 9, color: '#06B6D4', textAlign: 'center', fontWeight: 700 }}>{count} إعلانات دائرية</div>
+      {/* شارة توضح النسبة المئوية الممتلئة */}
+      <div style={{
+        position: 'absolute', top: 2, left: 3, fontSize: 7, 
+        color: '#06B6D4', fontWeight: 700,
+      }}>
+        {fillPercent}%
+      </div>
     </div>
   );
 };
@@ -179,10 +196,10 @@ const OPTION_PREVIEWS = {
   'typography.soft_accessible': <TypographyPreview text="Almarai"         fontFamily="'Cairo', sans-serif"   weight={400} style={{ letterSpacing:'0.02em' }} />,
   'typography.bold_vibrant':    <TypographyPreview text="Changa / Poppins" fontFamily="'Cairo', sans-serif"  weight={900} style={{ letterSpacing:'-0.02em' }} />,
 
-  /* أسلوب البانر الإعلاني (شريط دوّار) */
-  'adBannerStyle.carousel_2':   <BannerPreview type="carousel" count={2} />,
-  'adBannerStyle.carousel_3':   <BannerPreview type="carousel" count={3} />,
-  'adBannerStyle.carousel_4':   <BannerPreview type="carousel" count={4} />,
+  /* أبعاد البانر الإعلاني ومساحة الشاشة الممتلئة */
+  'adBannerStyle.compact_banner': <BannerSizePreview ratio="16:9" fillPercent={20} />,
+  'adBannerStyle.standard_square': <BannerSizePreview ratio="1:1" fillPercent={35} />,
+  'adBannerStyle.immersive_tall':  <BannerSizePreview ratio="4:5" fillPercent={50} />,
 
   /* أسلوب البطاقة */
   'cardStyle.flat_minimal':       <CardPreview type="flat_minimal"       />,
@@ -242,13 +259,13 @@ const FORM_CONFIG = [
   },
   {
     id: 'adBannerStyle',
-    group: 'عدد شرائح الإعلانات (شريط دوّار)',
+    group: 'حجم ونسبة البانر الإعلاني',
     emoji: '📢',
-    description: 'كم عدد البانرات الإعلانية التي تفضل عرضها بالتناوب؟',
+    description: 'ما هي نسبة العرض إلى الارتفاع وحجم المساحة التي يشغلها الإعلان في الواجهة؟',
     options: [
-      { value: 'carousel_2', label: 'إعلانين اثنين', hint: 'شريحتان تتناوبان تلقائياً' },
-      { value: 'carousel_3', label: '٣ إعلانات',     hint: 'ثلاث شرائح إعلانية دوارة' },
-      { value: 'carousel_4', label: '٤ إعلانات',     hint: 'أربع شرائح إعلانية للمزيد من العروض' },
+      { value: 'compact_banner', label: 'بانر عريض مدمج (16:9)', hint: 'يشغل مساحة صغيرة جداً (حوالي 20% من ارتفاع الشاشة)' },
+      { value: 'standard_square', label: 'مربع قياسي متوسط (1:1)', hint: 'توازن جيد بين المحتوى والإعلان (يشغل 35% من الشاشة)' },
+      { value: 'immersive_tall', label: 'رأسي غامر وطويل (4:5)', hint: 'تركيز ترويجي مكثف ومقروء (يشغل 50% من المساحة)' },
     ],
   },
   {
