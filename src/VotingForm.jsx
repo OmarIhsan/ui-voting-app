@@ -5,6 +5,25 @@ import { CheckCircle, Send, RotateCcw, ChevronDown } from 'lucide-react';
    معاينات مرئية لكل خيار
 ═══════════════════════════════════════════════════════════════ */
 
+/* ── المفهوم العام ── */
+const ConceptPreview = ({ id, color }) => (
+  <div style={{
+    width: 90, height: 48, borderRadius: 8,
+    background: 'rgba(255,255,255,0.05)',
+    border: `1px solid ${color}40`,
+    display: 'flex', flexDirection: 'column',
+    alignItems: 'center', justifyContent: 'center',
+    gap: 3, flexShrink: 0,
+  }}>
+    <span style={{ color, fontWeight: 800, fontSize: 11 }}>المفهوم {id}</span>
+    <div style={{ display: 'flex', gap: 3 }}>
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', opacity: 0.3 }} />
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', opacity: 0.1 }} />
+    </div>
+  </div>
+);
+
 /* ── اسم التطبيق ── */
 const BrandPreview = ({ name, color, icon, bg }) => (
   <div style={{
@@ -67,44 +86,27 @@ const TypographyPreview = ({ text, fontFamily, weight, style: extraStyle }) => (
   </div>
 );
 
-/* ── أسلوب البانر ── */
-const BannerPreview = ({ type }) => {
+/* ── أسلوب البانر (شريط دوّار / درج) ── */
+const BannerPreview = ({ type, count }) => {
   const base = {
     background: 'rgba(255,255,255,0.04)', borderRadius: 10,
     padding: '8px', border: '1px solid rgba(255,255,255,0.1)',
     width: 110, flexShrink: 0,
   };
 
-  if (type === 'edge_to_edge') return (
-    <div style={base}>
-      <div style={{ background: 'linear-gradient(90deg,#06B6D4,#0D9488)', borderRadius: 5, height: 30, marginBottom: 4, display: 'flex', alignItems: 'center', padding: '0 6px' }}>
-        <div style={{ background: 'rgba(255,255,255,0.8)', borderRadius: 2, height: 5, width: '60%' }} />
-      </div>
-      {[1,2].map(i => <div key={i} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 4, height: 10, marginBottom: 3 }} />)}
-    </div>
-  );
-
-  if (type === 'floating_shadow') return (
-    <div style={base}>
-      <div style={{ background: 'linear-gradient(135deg,#2563EB,#10B981)', borderRadius: 8, height: 30, margin: '2px 4px 6px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', padding: '0 6px' }}>
-        <div style={{ background: 'rgba(255,255,255,0.8)', borderRadius: 2, height: 5, width: '55%' }} />
-      </div>
-      {[1,2].map(i => <div key={i} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 4, height: 10, marginBottom: 3 }} />)}
-    </div>
-  );
-
-  // carousel
   return (
     <div style={base}>
       <div style={{ position: 'relative', height: 30, borderRadius: 5, overflow: 'hidden', marginBottom: 4 }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,#F97316,#0D9488)', display: 'flex', alignItems: 'center', padding: '0 6px' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,#0D9488,#06B6D4)', display: 'flex', alignItems: 'center', padding: '0 6px' }}>
           <div style={{ background: 'rgba(255,255,255,0.8)', borderRadius: 2, height: 5, width: '50%' }} />
         </div>
       </div>
       <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginBottom: 4 }}>
-        {[1,2,3].map(i => <div key={i} style={{ width: i===1?14:6, height: 4, borderRadius: 2, background: i===1?'#06B6D4':'rgba(255,255,255,0.2)' }} />)}
+        {[...Array(count)].map((_, i) => (
+          <div key={i} style={{ width: i===0?14:6, height: 4, borderRadius: 2, background: i===0?'#06B6D4':'rgba(255,255,255,0.2)' }} />
+        ))}
       </div>
-      {[1].map(i => <div key={i} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 4, height: 10 }} />)}
+      <div style={{ fontSize: 9, color: '#06B6D4', textAlign: 'center', fontWeight: 700 }}>{count} إعلانات دائرية</div>
     </div>
   );
 };
@@ -155,6 +157,11 @@ const CardPreview = ({ type }) => {
    خريطة المعاينات — تربط كل قيمة خيار بمكوّن معاينة
 ═══════════════════════════════════════════════════════════════ */
 const OPTION_PREVIEWS = {
+  /* المفهوم العام للتصميم */
+  'designConcept.concept1': <ConceptPreview id={1} color="#06B6D4" />,
+  'designConcept.concept2': <ConceptPreview id={2} color="#2563EB" />,
+  'designConcept.concept3': <ConceptPreview id={3} color="#F97316" />,
+
   /* اسم التطبيق */
   'brandName.moed':       <BrandPreview name="موعد"        color="#06B6D4" icon="📅" bg="rgba(6,182,212,0.08)"   />,
   'brandName.fawricare':  <BrandPreview name="فوري كير"     color="#F97316" icon="⚡" bg="rgba(249,115,22,0.08)"  />,
@@ -172,10 +179,10 @@ const OPTION_PREVIEWS = {
   'typography.soft_accessible': <TypographyPreview text="Almarai"         fontFamily="'Cairo', sans-serif"   weight={400} style={{ letterSpacing:'0.02em' }} />,
   'typography.bold_vibrant':    <TypographyPreview text="Changa / Poppins" fontFamily="'Cairo', sans-serif"  weight={900} style={{ letterSpacing:'-0.02em' }} />,
 
-  /* أسلوب البانر */
-  'adBannerStyle.edge_to_edge':    <BannerPreview type="edge_to_edge"    />,
-  'adBannerStyle.floating_shadow': <BannerPreview type="floating_shadow" />,
-  'adBannerStyle.carousel':        <BannerPreview type="carousel"        />,
+  /* أسلوب البانر الإعلاني (شريط دوّار) */
+  'adBannerStyle.carousel_2':   <BannerPreview type="carousel" count={2} />,
+  'adBannerStyle.carousel_3':   <BannerPreview type="carousel" count={3} />,
+  'adBannerStyle.carousel_4':   <BannerPreview type="carousel" count={4} />,
 
   /* أسلوب البطاقة */
   'cardStyle.flat_minimal':       <CardPreview type="flat_minimal"       />,
@@ -187,6 +194,17 @@ const OPTION_PREVIEWS = {
    إعداد النموذج
 ═══════════════════════════════════════════════════════════════ */
 const FORM_CONFIG = [
+  {
+    id: 'designConcept',
+    group: 'المفهوم العام للتصميم',
+    emoji: '📱',
+    description: 'أي مفهوم عام للتصميم تفضله للواجهة؟',
+    options: [
+      { value: 'concept1', label: 'المفهوم الأول (التصميم الفاخر)', hint: 'داكن، راقٍ، تقني، لكنات أكوا' },
+      { value: 'concept2', label: 'المفهوم الثاني (المعيار الطبي)', hint: 'موثوق، سهل ومألوف، وضع فاتح' },
+      { value: 'concept3', label: 'المفهوم الثالث (فايتال هب)', hint: 'جريء، حيوي ونابض بالحياة، تباين عالٍ' },
+    ],
+  },
   {
     id: 'brandName',
     group: 'اسم التطبيق',
@@ -224,13 +242,13 @@ const FORM_CONFIG = [
   },
   {
     id: 'adBannerStyle',
-    group: 'أسلوب البانر الإعلاني',
+    group: 'عدد شرائح الإعلانات (شريط دوّار)',
     emoji: '📢',
-    description: 'كيف يجب أن تُعرض المحتويات الترويجية في الشاشة الرئيسية؟',
+    description: 'كم عدد البانرات الإعلانية التي تفضل عرضها بالتناوب؟',
     options: [
-      { value: 'edge_to_edge',    label: 'بطاقة ممتدة بالكامل', hint: 'تكامل غامر بعرض كامل' },
-      { value: 'floating_shadow', label: 'عائمة بظل ثقيل',       hint: 'بطاقة مرفوعة تلفت الانتباه' },
-      { value: 'carousel',        label: 'شريط دوّار',            hint: 'إعلانات متعددة تتناوب' },
+      { value: 'carousel_2', label: 'إعلانين اثنين', hint: 'شريحتان تتناوبان تلقائياً' },
+      { value: 'carousel_3', label: '٣ إعلانات',     hint: 'ثلاث شرائح إعلانية دوارة' },
+      { value: 'carousel_4', label: '٤ إعلانات',     hint: 'أربع شرائح إعلانية للمزيد من العروض' },
     ],
   },
   {
